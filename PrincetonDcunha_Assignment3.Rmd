@@ -1,0 +1,242 @@
+---
+title: 'CIND 123: Data Analytics Basic Methods: Assignment-3'
+output:
+  html_document: default
+  pdf_document: default
+---
+<center> <h1> Assignment 3 (10%) </h1> </center>
+<center> <h2> Total 100 Marks </h2> </center>
+<center> <h3> Princeton Dcunha </h3> </center>
+<center> <h3> DHA 501150458 </h3> </center>
+---
+
+
+## Instructions
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+Use RStudio for this assignment. Complete the assignment by inserting your R code wherever you see the string "#INSERT YOUR ANSWER HERE".
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+Submit **both**  the rmd and generated output files. Failing to submit both files will be subject to mark deduction.
+
+## Sample Question and Solution
+
+Use `seq()` to create the vector $(2,4,6,\ldots,20)$.
+
+```{r}
+#INSERT YOUR ANSWER HERE.
+seq(2,20,by = 2)
+
+```
+## Question 1 [15 Pts]
+
+a) [5 Pts] First and second midterm grades of some students are given as c(85,76,78,88,90,95,42,31) and c(55,66,48,58,80,75,32,22). Set R variables `first` and `second` respectively. Then find the least-squares line relating the second midterm to the first midterm. 
+
+Does the assumption of a linear relationship appear to be reasonable in this case? Give reasons to your answer as a comment.
+```{r}
+first <- c(85,76,78,88,90,95,42,31)
+second <- c(55,66,48,58,80,75,32,22)
+studentsgrade <- data.frame(first,second)
+
+#Least-Squares Line
+stgrademodel <- lm(second~first,studentsgrade)
+stgrademodel
+
+summary(stgrademodel)
+
+cor(first,second)
+
+#The correlation between first and the second is very near to 1. Hence exhibiting a strong linear relationship. Also the standard error for the first midterm is 0.1463 which is a good value. The Multiple R-Squared and Adjusted R-Squared are high and also pretty near to 1 making it is a good model. This makes the linear relationship reasonable for the above.
+```
+
+b) [5 Pts] Plot the second midterm as a function of the first midterm using a scatterplot and graph the least-square line on the same plot. 
+```{r}
+plot(first,second, xlab="First Midterm",ylab="Second Midterm")
+abline(stgrademodel)
+```
+
+c) [5 Pts] Use the regression line to predict the second midterm grade when the first midterm grade is 88. 
+```{r}
+temp.df <- data.frame(first=c(88))
+predict(stgrademodel,temp.df)
+```
+
+
+
+## Question 2 [45 Pts]
+
+This question makes use of package "plm". Please load Crime dataset as follows:
+```{r load_packages}
+# or install.packages("plm")
+library(plm) 
+data(Crime)
+```
+
+a) [5 Pts] Display the first 10 rows of 'crime' data and display the names of all the variables, then display a descriptive summary of each variable. 
+```{r}
+#First 10 Rows
+head(Crime,10)
+
+#Names of All Variables
+names(Crime)
+
+#Descriptive Summary of Each Variable
+summary(Crime)
+```
+
+b) [5 Pts] Calculate the mean,variance and standard deviation of tax revenue per capita (taxpc) by omitting the missing values, if any. 
+```{r}
+attach(Crime)
+
+#Mean
+mean(na.omit(taxpc))
+
+#Variance
+var(na.omit(taxpc))
+
+#Standard Deviation
+sd(na.omit(taxpc))
+```
+c) [5 Pts] Use `ldensity` (log-density) and `smsa` variables to build a linear regression model to predict tax per capita (taxpc).  And, compare with another linear regression model that uses `density` (density) and `smsa`.
+
+   [5 Pts] How can you draw a conclusion from the results? 
+   (Note: Full marks requires comment on the predictors)
+```{r}
+model1 <- lm(taxpc~ldensity+smsa,Crime)
+summary1 <- summary(model1)
+summary1
+
+model2 <- lm(taxpc~density+smsa,Crime)
+summary2 <- summary(model2)
+summary2
+
+#Comparing model1 (taxpc~ldensity+smsa) with model2 (taxpc~density+smsa), we can see that model1's ldensity & smsa has better Pr values with ***. Whereas model2's density doesn't have a good Pr value. It has no stars. Also, p-value of model1 is lower than that of model2.
+
+#If we look at Multiple R-squared and Adjusted R-squared values of both the models, model1 has higher values than model2. Because of all the above reason, model1 is the best model.
+```
+
+d) [5 Pts] Based on the output of your model, write the equations using the intercept and factors of `smsa` when `density` is set to 2.4. and compare the result with `predict()` function.  
+Hint: Explore `predict()` function
+```{r}
+#Equation with smsa as "yes"
+as.numeric(model2$coefficients[1]+model2$coefficients[2]*2.4+model2$coefficients[3]*1)
+
+#Predict with smsa as "yes"
+temp.df <- data.frame(smsa=c("yes"),density=c(2.4))
+predict(model2,temp.df)
+
+#Equation with smsa as "no"
+as.numeric(model2$coefficients[1]+model2$coefficients[2]*2.4+model2$coefficients[3]*0)
+
+#Predict with smsa as "no"
+temp.df <- data.frame(smsa=c("no"),density=c(2.4))
+predict(model2,temp.df)
+```
+e) [5 Pts] Find Pearson correlation between `density` and tax per capita `taxpc`; and also Pearson correlation between density and police per capita `polpc`. 
+
+   [5 Pts] What conclusions can you draw? Write your reasons as comments.
+```{r}
+cor(density,taxpc)
+
+cor(density,polpc)
+
+#Conclusion:
+#1. Crime density & taxpc show weak positive correlation
+#2. Crime density & polpc show weak negative correlation.
+```
+
+f) [5 Pts] Display the correlation matrix of the variables: avgsen, polpc, density, taxpc. 
+
+   [5 Pts]  Write what conclusion you can draw, as comments.
+```{r}
+library(corrplot)
+new_crime_table <- data.frame(avgsen,polpc,density,taxpc)
+new_crime_table_cor <- cor(new_crime_table)
+corrplot(new_crime_table_cor,method = "ellipse")
+
+#Conclusion:
+#1. There is a strong positive linear correlation between density & taxpc.
+#2. Pairs of avgsen & density, polpc & taxpc are having a weak positive linear correlation.
+#3. There is no linear relationship between polpc & avgsen.
+#4. polpc and density are having a weak negative linear correlation.
+```
+
+
+
+## Question 3 [15 Pts]
+
+This question makes use of package "ISwR". Please load `airquality` dataset as following:
+
+```{r}
+# or install.packages("ISwR")
+library(ISwR) 
+data(airquality)
+str(airquality)
+```
+
+
+a) [5 Pts] Use a histogram to assess the normality of the `Ozone` variable, then explain why it does not appear normally distributed. 
+```{r}
+attach(airquality)
+hist(Ozone)
+
+#A normal distribution is symmetric in nature. But the histogram for Ozone variable shows it be right skewed. This means that values of Ozone observed is mostly low, shifting the peak to the extreme left. Hence it is not normally distributed.
+```
+
+b) [5 Pts] Create a boxplot that shows the distribution of `Ozone` in each month. Use different colors for each month. 
+
+```{r}
+boxplot(Ozone[Month==1],Ozone[Month==2],Ozone[Month==3],Ozone[Month==4],Ozone[Month==5],Ozone[Month==6],Ozone[Month==7],Ozone[Month==8],Ozone[Month==9],Ozone[Month==10],Ozone[Month==11],Ozone[Month==12],xlab="Month",ylab="Ozone",names = c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"),col = c("black","gray","pink","yellow","red","purple","blue","green","brown","white","violet","indigo"))
+```
+
+c) [5 Pts] Create a matrix of scatterplots of all the numeric variables in the `airquality` dataset (i.e. Ozone, Solar.R, Wind and Temp.)
+(Hint: investigate pairs() function) 
+
+```{r}
+vars <- c("Ozone","Solar.R","Wind","Temp")
+pairs(airquality[vars])
+```
+
+## Question 4 [25 Pts]
+
+$\pi$ appears in the formula for the standard normal distribution, the most important probability distribution in statistics. Why not give it a try to calculate $\pi$ using statistics! In fact, you'll use a simulation technique called the *Monte Carlo Method*.
+
+Recall that the area of a circle of radius $r$ is $A = \pi r^2$. Therefore the area of a circle of radius 1, aka a *unit circle*, is $\pi$. You'll compute an approximation to the area of this circle using the Monte Carlo Method.
+
+a) [5 Pts] The Monte Carlo Method uses random numbers to simulate some process. Here the process is throwing darts at a square. Assume the darts are uniformly distributed over the square. Imagine a unit circle enclosed by a square whose sides are of length 2. Set an R variable `area.square` to be the area of a square whose sides are of length 2. 
+```{r}
+length.square <- 2
+area.square <- length.square^2
+area.square
+```
+
+b) [5 Pts] The points of the square can be given x-y coordinates. Let both x and y range from -1 to +1 so that the square is centred on the origin of the coordinate system. Throw some darts at the square by generating random numeric vectors x and y, each of length `N = 10,000`. Set R variables `x` and `y` each to be uniformly distributed random numbers in the range -1 to +1. 
+(hint: runif() generates random number for the uniform distribution) 
+```{r}
+dartspos <- data.frame(x=runif(10000,-1,1),y=runif(10000,-1,1))
+head(dartspos)
+```
+
+c) [10 Pts] Now count how many darts landed inside the unit circle. Recall that a point is inside the unit circle when $x^2 + y^2 < 1$. Save the result of successful hits in a variable named hit. 
+(hint: a for loop over the length of x and y is one option to reach hit) 
+```{r}
+hit <- sum(dartspos$x^2+dartspos$y^2<1)
+hit
+```
+
+d) [5 Pts] The probability that a dart hits inside the circle is proportional to the ratio of the area of the circle to the area of the square. Use this fact to calculate an approximation to $\pi$ and print the result. 
+```{r}
+#Probability that Dart hits inside the Circle
+probDH <- hit/10000
+
+#Area of Unit Circle = Pi
+area.circle <- probDH*area.square
+area.circle
+```
+Wow you got the first estimate for `pi` $\pi$ at least accurate to first decimal place by this simple logic! Congratulations! you have completed the first run of the Monte Carlo simulation. 
+
+If there is further interest, put all the above logic in a function, and call it 50 times at least, and store the results in a vector called pi then take the mean of pi vector to be more accurate. 
+
+*** End of Assignment ***
